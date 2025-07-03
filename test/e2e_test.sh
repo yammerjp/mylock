@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Color codes for output
@@ -56,7 +56,9 @@ done
 
 # Build the binary
 echo "Building mylock binary..."
-go build -o ./mylock ./cmd/mylock
+go build -o ./mylock ./cmd/mylock || { echo "Build failed"; exit 1; }
+echo "Binary built successfully"
+ls -la ./mylock
 
 # Set environment variables
 export MYLOCK_HOST=localhost
