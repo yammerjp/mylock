@@ -20,6 +20,12 @@ func run(args []string) int {
 	cliArgs, err := cli.ParseCLI(args[1:])
 	if err != nil {
 		// Kong will output help automatically on --help
+		// Check if help was requested
+		for _, arg := range args {
+			if arg == "--help" || arg == "-h" {
+				return 0
+			}
+		}
 		return locker.InternalError
 	}
 
