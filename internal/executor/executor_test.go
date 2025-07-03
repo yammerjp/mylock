@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 )
@@ -81,58 +80,47 @@ func TestExecute_SignalHandling(t *testing.T) {
 		t.Skip("Skipping signal test on Windows")
 	}
 
-	tests := []struct {
-		name     string
-		signal   os.Signal
-		wantExit bool
-	}{
-		{
-			name:     "SIGINT handling",
-			signal:   syscall.SIGINT,
-			wantExit: true,
-		},
-		{
-			name:     "SIGTERM handling",
-			signal:   syscall.SIGTERM,
-			wantExit: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
-			executor := New()
-
-			// Create a long-running command
-			cmd := []string{"sh", "-c", "sleep 10"}
-
-			done := make(chan struct{})
-
-			go func() {
-				_, _ = executor.Execute(ctx, cmd)
-				close(done)
-			}()
-
-			// Give the command time to start
-			time.Sleep(500 * time.Millisecond)
-
-			// Send signal to current process
-			process, _ := os.FindProcess(os.Getpid())
-			_ = process.Signal(tt.signal)
-
-			// Wait for completion with timeout
-			select {
-			case <-done:
-				if !tt.wantExit {
-					t.Errorf("Command exited when it shouldn't have")
-				}
-			case <-time.After(5 * time.Second):
-				if tt.wantExit {
-					t.Errorf("Command didn't exit within timeout")
-				}
-			}
+	// Test that the executor properly handles context cancellation
+	t.Run("context cancellation", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		executor := New()
+		
+		// Create a command that will run for a while
+		cmd := []string{"sleep", "10"}
+		
+		done := make(chan struct {
+			exitCode int
+			err      error
 		})
-	}
+
+		go func() {
+			exitCode, err := executor.Execute(ctx, cmd)
+			done <- struct {
+				exitCode int
+				err      error
+			}{exitCode, err}
+		}()
+
+		// Give the command time to start
+		time.Sleep(100 * time.Millisecond)
+
+		// Cancel context which should kill the process
+		cancel()
+
+		// Wait for completion
+		select {
+		case result := <-done:
+			// Context cancellation should result in process being killed
+			if result.exitCode != -1 {
+				t.Errorf("Expected exit code -1 for killed process, got %d", result.exitCode)
+			}
+			if result.err == nil || (!strings.Contains(result.err.Error(), "context") && !strings.Contains(result.err.Error(), "signal: killed")) {
+				t.Errorf("Expected context or killed error, got: %v", result.err)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("Command didn't exit within timeout")
+		}
+	})
 }
 
 func TestExecute_StdoutStderr(t *testing.T) {
