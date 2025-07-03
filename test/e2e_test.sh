@@ -13,12 +13,12 @@ TESTS_PASSED=0
 # Helper functions
 test_start() {
     echo -n "Testing: $1 ... "
-    ((TESTS_RUN++))
+    TESTS_RUN=$((TESTS_RUN + 1))
 }
 
 test_pass() {
     echo -e "${GREEN}PASS${NC}"
-    ((TESTS_PASSED++))
+    TESTS_PASSED=$((TESTS_PASSED + 1))
 }
 
 test_fail() {
@@ -71,13 +71,13 @@ export MYLOCK_DATABASE=testdb
 test_start "Help flag"
 if [ ! -f ./mylock ]; then
     test_fail "Binary not found at ./mylock"
-    exit 1
-fi
-HELP_OUTPUT=$(./mylock --help 2>&1) || true
-if echo "$HELP_OUTPUT" | grep -q "Acquire a MySQL advisory lock"; then
-    test_pass
 else
-    test_fail "Help output not found. Got: $HELP_OUTPUT"
+    HELP_OUTPUT=$(./mylock --help 2>&1) || true
+    if echo "$HELP_OUTPUT" | grep -q "Acquire a MySQL advisory lock"; then
+        test_pass
+    else
+        test_fail "Help output not found. Got: $HELP_OUTPUT"
+    fi
 fi
 
 # Test 2: Simple command execution
