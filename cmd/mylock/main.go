@@ -19,11 +19,7 @@ func run(args []string) int {
 	// Parse CLI arguments
 	cliArgs, err := cli.ParseCLI(args[1:])
 	if err != nil {
-		if err.Error() == "help requested" || (len(args) > 1 && args[1] == "--help") {
-			cliArgs.PrintHelp(os.Stdout)
-			return 0
-		}
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		// Kong will output help automatically on --help
 		return locker.InternalError
 	}
 

@@ -113,7 +113,7 @@ func TestParseCLI(t *testing.T) {
 				"MYLOCK_PASSWORD": "testpass",
 				"MYLOCK_DATABASE": "testdb",
 			},
-			wantErr: true, // kong exits with help
+			wantErr: true, // kong prints help and returns error
 		},
 	}
 

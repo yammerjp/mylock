@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"io"
+	"os"
 
 	"github.com/alecthomas/kong"
 )
@@ -30,9 +30,10 @@ func ParseCLI(args []string) (CLI, error) {
 		kong.UsageOnError(),
 		kong.Exit(func(int) {}), // Prevent os.Exit during testing
 		kong.ConfigureHelp(kong.HelpOptions{
-			Compact: true,
-			Summary: true,
+			Compact: false,
+			Summary: false,
 		}),
+		kong.Help(helpFormatter),
 		kong.Vars{
 			"version": "1.0.0",
 		},
@@ -41,7 +42,6 @@ func ParseCLI(args []string) (CLI, error) {
 		return cli, err
 	}
 
-	// Suppress help output for testing
 	ctx, err := parser.Parse(args)
 	if err != nil {
 		return cli, err
@@ -54,7 +54,13 @@ func ParseCLI(args []string) (CLI, error) {
 	return cli, nil
 }
 
-func (c CLI) PrintHelp(w io.Writer) {
+func helpFormatter(options kong.HelpOptions, ctx *kong.Context) error {
+	w := os.Stdout
+	if options.NoExpandSubcommands {
+		// This is for error help, use stderr
+		w = os.Stderr
+	}
+	
 	fmt.Fprintf(w, `mylock - Acquire a MySQL advisory lock and run a command
 
 Usage:
@@ -92,6 +98,7 @@ Example:
   MYLOCK_DATABASE=jobs \
   mylock --lock-name daily-report --timeout 10 -- ./generate_report.sh
 `)
+	return nil
 }
 
 func (c Config) DSN() string {
