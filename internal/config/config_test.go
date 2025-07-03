@@ -192,3 +192,4 @@ func TestConfig_DSN(t *testing.T) {
 		})
 	}
 }
+

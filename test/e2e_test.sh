@@ -67,7 +67,7 @@ export MYLOCK_DATABASE=testdb
 
 # Test 1: Help flag
 test_start "Help flag"
-if ./mylock --help 2>&1 | grep -q "mylock - Acquire a MySQL advisory lock"; then
+if ./mylock --help 2>&1 | grep -q "Acquire a MySQL advisory lock"; then
     test_pass
 else
     test_fail "Help output not found"

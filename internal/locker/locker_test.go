@@ -1,38 +1,11 @@
 package locker
 
 import (
-	"context"
-	"database/sql"
 	"errors"
 	"testing"
 )
 
-type mockDB struct {
-	lockResult   sql.NullInt64
-	lockErr      error
-	releaseResult sql.NullInt64
-	releaseErr   error
-	pingErr      error
-	closeErr     error
-}
-
-func (m *mockDB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	// This is a simplified mock - in reality we'd need to mock sql.Row
-	// For testing purposes, we'll use the actual implementation with a test database
-	return nil
-}
-
-func (m *mockDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	return nil, nil
-}
-
-func (m *mockDB) PingContext(ctx context.Context) error {
-	return m.pingErr
-}
-
-func (m *mockDB) Close() error {
-	return m.closeErr
-}
+// mockDB was removed as it was unused
 
 func TestNewLocker(t *testing.T) {
 	tests := []struct {
@@ -58,7 +31,7 @@ func TestNewLocker(t *testing.T) {
 			if tt.name == "valid DSN" {
 				t.Skip("Skipping test requiring actual MySQL connection")
 			}
-			
+
 			_, err := NewLocker(tt.dsn)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewLocker() error = %v, wantErr %v", err, tt.wantErr)
@@ -247,3 +220,4 @@ func TestExitCode(t *testing.T) {
 		})
 	}
 }
+

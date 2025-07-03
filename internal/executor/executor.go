@@ -26,7 +26,7 @@ func (e *Executor) Execute(ctx context.Context, command []string) (int, error) {
 	}
 
 	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
-	
+
 	// Pass through stdin, stdout, stderr
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -83,3 +83,4 @@ func GetExitCode(err error) int {
 
 	return -1
 }
+

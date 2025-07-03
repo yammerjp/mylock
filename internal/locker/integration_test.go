@@ -33,7 +33,7 @@ func getTestDSN() string {
 	if database == "" {
 		database = "testdb"
 	}
-	
+
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, host, port, database)
 }
 
@@ -99,25 +99,25 @@ func TestLocker_Integration_ConcurrentLocking(t *testing.T) {
 	lockName := "test-concurrent-lock"
 	numWorkers := 5
 	workDuration := 100 * time.Millisecond
-	
+
 	var wg sync.WaitGroup
 	results := make([]int, numWorkers)
 	errors := make([]error, numWorkers)
-	
+
 	startTime := time.Now()
-	
+
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-			
+
 			locker, err := NewLocker(dsn)
 			if err != nil {
 				errors[workerID] = err
 				return
 			}
 			defer locker.Close()
-			
+
 			ctx := context.Background()
 			err = locker.WithLock(ctx, lockName, 10, func() error {
 				// Simulate work
@@ -125,15 +125,15 @@ func TestLocker_Integration_ConcurrentLocking(t *testing.T) {
 				results[workerID] = 1
 				return nil
 			})
-			
+
 			if err != nil {
 				errors[workerID] = err
 			}
 		}(i)
 	}
-	
+
 	wg.Wait()
-	
+
 	// Check that all workers completed
 	successCount := 0
 	for i, result := range results {
@@ -144,11 +144,11 @@ func TestLocker_Integration_ConcurrentLocking(t *testing.T) {
 			successCount++
 		}
 	}
-	
+
 	if successCount != numWorkers {
 		t.Errorf("Expected all %d workers to complete, but only %d did", numWorkers, successCount)
 	}
-	
+
 	// Check that execution was serialized (should take at least numWorkers * workDuration)
 	elapsed := time.Since(startTime)
 	minExpected := time.Duration(numWorkers) * workDuration
@@ -160,14 +160,14 @@ func TestLocker_Integration_ConcurrentLocking(t *testing.T) {
 func TestLocker_Integration_LockTimeout(t *testing.T) {
 	dsn := getTestDSN()
 	lockName := "test-timeout-lock"
-	
+
 	// First locker acquires the lock
 	locker1, err := NewLocker(dsn)
 	if err != nil {
 		t.Fatalf("Failed to create locker1: %v", err)
 	}
 	defer locker1.Close()
-	
+
 	ctx := context.Background()
 	acquired, err := locker1.AcquireLock(ctx, lockName, 5)
 	if err != nil {
@@ -177,25 +177,25 @@ func TestLocker_Integration_LockTimeout(t *testing.T) {
 		t.Fatal("Expected to acquire lock")
 	}
 	defer locker1.ReleaseLock(ctx, lockName)
-	
+
 	// Second locker tries to acquire with short timeout
 	locker2, err := NewLocker(dsn)
 	if err != nil {
 		t.Fatalf("Failed to create locker2: %v", err)
 	}
 	defer locker2.Close()
-	
+
 	start := time.Now()
 	err = locker2.WithLock(ctx, lockName, 1, func() error {
 		t.Fatal("Should not execute function when lock is not acquired")
 		return nil
 	})
 	elapsed := time.Since(start)
-	
+
 	if err != ErrLockTimeout {
 		t.Errorf("Expected ErrLockTimeout, got %v", err)
 	}
-	
+
 	// Should timeout after approximately 1 second
 	if elapsed < 900*time.Millisecond || elapsed > 1500*time.Millisecond {
 		t.Errorf("Expected timeout after ~1 second, but took %v", elapsed)
@@ -204,15 +204,15 @@ func TestLocker_Integration_LockTimeout(t *testing.T) {
 
 func TestLocker_Integration_MultipleLocksNonBlocking(t *testing.T) {
 	dsn := getTestDSN()
-	
+
 	locker, err := NewLocker(dsn)
 	if err != nil {
 		t.Fatalf("Failed to create locker: %v", err)
 	}
 	defer locker.Close()
-	
+
 	ctx := context.Background()
-	
+
 	// Acquire multiple different locks
 	locks := []string{"lock1", "lock2", "lock3"}
 	for _, lockName := range locks {
@@ -224,7 +224,7 @@ func TestLocker_Integration_MultipleLocksNonBlocking(t *testing.T) {
 			t.Fatalf("Expected to acquire lock %s", lockName)
 		}
 	}
-	
+
 	// Release all locks
 	for _, lockName := range locks {
 		released, err := locker.ReleaseLock(ctx, lockName)
@@ -236,3 +236,4 @@ func TestLocker_Integration_MultipleLocksNonBlocking(t *testing.T) {
 		}
 	}
 }
+

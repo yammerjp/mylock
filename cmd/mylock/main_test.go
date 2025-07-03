@@ -68,7 +68,7 @@ func TestMainFunction(t *testing.T) {
 
 Usage:
   mylock --lock-name <name> --timeout <seconds> -- <command> [args...]`
-				
+
 				if !strings.Contains(helpOutput, "mylock - Acquire a MySQL advisory lock") {
 					t.Errorf("Help output missing expected content")
 				}
@@ -163,7 +163,7 @@ func TestRun(t *testing.T) {
 			os.Stderr = oldStderr
 
 			var buf bytes.Buffer
-			buf.ReadFrom(r)
+			_, _ = buf.ReadFrom(r)
 
 			if code != tt.wantCode {
 				t.Errorf("run() = %v, want %v", code, tt.wantCode)
@@ -202,3 +202,4 @@ func TestExitHandler(t *testing.T) {
 		})
 	}
 }
+

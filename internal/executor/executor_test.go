@@ -14,42 +14,42 @@ import (
 
 func TestExecute(t *testing.T) {
 	tests := []struct {
-		name        string
-		command     []string
-		wantErr     bool
+		name         string
+		command      []string
+		wantErr      bool
 		wantExitCode int
-		wantOutput  string
+		wantOutput   string
 	}{
 		{
-			name:        "successful command",
-			command:     []string{"echo", "hello"},
-			wantErr:     false,
+			name:         "successful command",
+			command:      []string{"echo", "hello"},
+			wantErr:      false,
 			wantExitCode: 0,
-			wantOutput:  "hello",
+			wantOutput:   "hello",
 		},
 		{
-			name:        "command with arguments",
-			command:     []string{"echo", "hello", "world"},
-			wantErr:     false,
+			name:         "command with arguments",
+			command:      []string{"echo", "hello", "world"},
+			wantErr:      false,
 			wantExitCode: 0,
-			wantOutput:  "hello world",
+			wantOutput:   "hello world",
 		},
 		{
-			name:        "command not found",
-			command:     []string{"nonexistentcommand"},
-			wantErr:     true,
+			name:         "command not found",
+			command:      []string{"nonexistentcommand"},
+			wantErr:      true,
 			wantExitCode: -1,
 		},
 		{
-			name:        "command fails",
-			command:     []string{"sh", "-c", "exit 42"},
-			wantErr:     true,
+			name:         "command fails",
+			command:      []string{"sh", "-c", "exit 42"},
+			wantErr:      true,
 			wantExitCode: 42,
 		},
 		{
-			name:        "empty command",
-			command:     []string{},
-			wantErr:     true,
+			name:         "empty command",
+			command:      []string{},
+			wantErr:      true,
 			wantExitCode: -1,
 		},
 	}
@@ -63,12 +63,12 @@ func TestExecute(t *testing.T) {
 
 			ctx := context.Background()
 			executor := New()
-			
+
 			exitCode, err := executor.Execute(ctx, tt.command)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			
+
 			if tt.wantExitCode >= 0 && exitCode != tt.wantExitCode {
 				t.Errorf("Execute() exitCode = %v, want %v", exitCode, tt.wantExitCode)
 			}
@@ -105,11 +105,11 @@ func TestExecute_SignalHandling(t *testing.T) {
 
 			// Create a long-running command
 			cmd := []string{"sh", "-c", "sleep 10"}
-			
+
 			done := make(chan struct{})
 
 			go func() {
-				executor.Execute(ctx, cmd)
+				_, _ = executor.Execute(ctx, cmd)
 				close(done)
 			}()
 
@@ -118,7 +118,7 @@ func TestExecute_SignalHandling(t *testing.T) {
 
 			// Send signal to current process
 			process, _ := os.FindProcess(os.Getpid())
-			process.Signal(tt.signal)
+			_ = process.Signal(tt.signal)
 
 			// Wait for completion with timeout
 			select {
@@ -171,27 +171,27 @@ func TestExecute_StdoutStderr(t *testing.T) {
 			// Capture stdout and stderr
 			oldStdout := os.Stdout
 			oldStderr := os.Stderr
-			
+
 			rOut, wOut, _ := os.Pipe()
 			rErr, wErr, _ := os.Pipe()
-			
+
 			os.Stdout = wOut
 			os.Stderr = wErr
 
 			ctx := context.Background()
 			executor := New()
-			
+
 			// Execute command
-			executor.Execute(ctx, tt.command)
+			_, _ = executor.Execute(ctx, tt.command)
 
 			// Restore stdout/stderr
 			wOut.Close()
 			wErr.Close()
-			
+
 			var bufOut, bufErr bytes.Buffer
-			bufOut.ReadFrom(rOut)
-			bufErr.ReadFrom(rErr)
-			
+			_, _ = bufOut.ReadFrom(rOut)
+			_, _ = bufErr.ReadFrom(rErr)
+
 			os.Stdout = oldStdout
 			os.Stderr = oldStderr
 
@@ -217,14 +217,14 @@ func TestExecute_Context(t *testing.T) {
 	defer cancel()
 
 	executor := New()
-	
+
 	// Long-running command that should be cancelled
 	_, err := executor.Execute(ctx, []string{"sleep", "10"})
-	
+
 	if err == nil {
 		t.Errorf("Expected error due to context cancellation")
 	}
-	
+
 	// Check if it's a context error
 	if !strings.Contains(err.Error(), "context") && !strings.Contains(err.Error(), "signal: killed") {
 		t.Errorf("Expected context cancellation error, got: %v", err)
@@ -262,3 +262,4 @@ func TestGetExitCode(t *testing.T) {
 		})
 	}
 }
+
