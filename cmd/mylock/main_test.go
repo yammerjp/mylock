@@ -202,4 +202,3 @@ func TestExitHandler(t *testing.T) {
 		})
 	}
 }
-

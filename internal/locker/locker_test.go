@@ -220,4 +220,3 @@ func TestExitCode(t *testing.T) {
 		})
 	}
 }
-

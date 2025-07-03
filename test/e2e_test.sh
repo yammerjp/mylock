@@ -56,7 +56,7 @@ done
 
 # Build the binary
 echo "Building mylock binary..."
-go build -o mylock ./cmd/mylock
+go build -o ./mylock ./cmd/mylock
 
 # Set environment variables
 export MYLOCK_HOST=localhost
@@ -67,11 +67,15 @@ export MYLOCK_DATABASE=testdb
 
 # Test 1: Help flag
 test_start "Help flag"
+if [ ! -f ./mylock ]; then
+    test_fail "Binary not found at ./mylock"
+    exit 1
+fi
 HELP_OUTPUT=$(./mylock --help 2>&1) || true
 if echo "$HELP_OUTPUT" | grep -q "Acquire a MySQL advisory lock"; then
     test_pass
 else
-    test_fail "Help output not found"
+    test_fail "Help output not found. Got: $HELP_OUTPUT"
 fi
 
 # Test 2: Simple command execution

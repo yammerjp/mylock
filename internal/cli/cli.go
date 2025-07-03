@@ -60,7 +60,7 @@ func helpFormatter(options kong.HelpOptions, ctx *kong.Context) error {
 		// This is for error help, use stderr
 		w = os.Stderr
 	}
-	
+
 	fmt.Fprintf(w, `mylock - Acquire a MySQL advisory lock and run a command
 
 Usage:
@@ -105,4 +105,3 @@ func (c Config) DSN() string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
 		c.User, c.Password, c.Host, c.Port, c.Database)
 }
-

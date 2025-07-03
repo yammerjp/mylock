@@ -84,10 +84,10 @@ func TestExecute_SignalHandling(t *testing.T) {
 	t.Run("context cancellation", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		executor := New()
-		
+
 		// Create a command that will run for a while
 		cmd := []string{"sleep", "10"}
-		
+
 		done := make(chan struct {
 			exitCode int
 			err      error
@@ -250,4 +250,3 @@ func TestGetExitCode(t *testing.T) {
 		})
 	}
 }
-
