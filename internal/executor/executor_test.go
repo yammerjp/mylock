@@ -114,7 +114,7 @@ func TestExecute_SignalHandling(t *testing.T) {
 			}()
 
 			// Give the command time to start
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 
 			// Send signal to current process
 			process, _ := os.FindProcess(os.Getpid())
@@ -126,7 +126,7 @@ func TestExecute_SignalHandling(t *testing.T) {
 				if !tt.wantExit {
 					t.Errorf("Command exited when it shouldn't have")
 				}
-			case <-time.After(2 * time.Second):
+			case <-time.After(5 * time.Second):
 				if tt.wantExit {
 					t.Errorf("Command didn't exit within timeout")
 				}

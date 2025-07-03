@@ -1,6 +1,8 @@
 module github.com/yammerjp/mylock
 
-go 1.21
+go 1.21.0
+
+toolchain go1.23.5
 
 require (
 	github.com/alecthomas/kong v1.12.0
