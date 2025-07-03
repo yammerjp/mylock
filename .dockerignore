@@ -1,0 +1,26 @@
+# Binaries
+mylock
+mylock-*
+*.exe
+
+# Test files
+*.test
+coverage.out
+
+# Development
+.git/
+.github/
+test/
+Makefile
+compose.yaml
+README.md
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

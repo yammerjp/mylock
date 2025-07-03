@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+    
+    - name: go fmt
+      run: |
+        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+          echo "Please run 'gofmt -s -w .' to format your code"
+          gofmt -s -d .
+          exit 1
+        fi
+    
+    - name: go vet
+      run: go vet ./...
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.20', '1.21', '1.22']
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+    
+    - name: Install dependencies
+      run: go mod download
+    
+    - name: Run unit tests
+      run: go test -v -race -coverprofile=coverage.out ./...
+    
+    - name: Upload coverage
+      if: matrix.go-version == '1.21'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.out
+
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Start MySQL
+      run: docker compose up -d
+    
+    - name: Wait for MySQL
+      run: |
+        for i in {1..30}; do
+          if docker compose exec -T mysql mysqladmin ping -h localhost -u root -prootpass >/dev/null 2>&1; then
+            echo "MySQL is ready!"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "MySQL failed to start"
+            exit 1
+          fi
+          sleep 1
+        done
+    
+    - name: Run integration tests
+      run: go test -v -tags=integration ./internal/locker/...
+      env:
+        TEST_MYSQL_HOST: localhost
+        TEST_MYSQL_PORT: 3306
+        TEST_MYSQL_USER: testuser
+        TEST_MYSQL_PASSWORD: testpass
+        TEST_MYSQL_DATABASE: testdb
+    
+    - name: Stop MySQL
+      if: always()
+      run: docker compose down -v
+
+  e2e-test:
+    name: E2E Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Run E2E tests
+      run: ./test/e2e_test.sh
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+          - os: linux
+            arch: arm64
+          - os: darwin
+            arch: amd64
+          - os: darwin
+            arch: arm64
+          - os: windows
+            arch: amd64
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Build
+      run: |
+        GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -v -o mylock-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }} ./cmd/mylock
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: mylock-${{ matrix.os }}-${{ matrix.arch }}
+        path: mylock-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.os == 'windows' && '.exe' || '' }}
