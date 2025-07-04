@@ -1,0 +1,92 @@
+version: 2
+
+project_name: mylock
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    main: ./cmd/mylock
+    binary: mylock
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Skip unsupported combinations
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: '{{ .ProjectName }}_checksums.txt'
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: Bug fixes
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: yammerjp
+    name: mylock
+  draft: false
+  prerelease: auto
+  name_template: "{{.ProjectName}} v{{.Version}}"
+  footer: |
+    ## Installation
+    
+    ### Binary
+    Download the appropriate binary for your platform from the assets below.
+    
+    ### Go
+    ```bash
+    go install github.com/yammerjp/mylock/cmd/mylock@latest
+    ```
+    
+    ## Usage
+    ```bash
+    export MYLOCK_HOST=localhost
+    export MYLOCK_PORT=3306
+    export MYLOCK_USER=myuser
+    export MYLOCK_PASSWORD=mypass
+    export MYLOCK_DATABASE=mydb
+    
+    mylock --lock-name daily-report --timeout 10 -- ./generate_report.sh
+    ```

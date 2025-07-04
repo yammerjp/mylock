@@ -13,7 +13,10 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -23,126 +26,11 @@ jobs:
     - name: Run tests
       run: go test -v ./...
     
-    - name: Build binaries
-      run: |
-        # Create output directory
-        mkdir -p dist
-        
-        # Build for multiple platforms
-        PLATFORMS=(
-          "linux/amd64"
-          "linux/arm64"
-          "darwin/amd64"
-          "darwin/arm64"
-          "windows/amd64"
-        )
-        
-        for PLATFORM in "${PLATFORMS[@]}"; do
-          GOOS=${PLATFORM%/*}
-          GOARCH=${PLATFORM#*/}
-          OUTPUT="mylock-${GOOS}-${GOARCH}"
-          
-          if [ "$GOOS" = "windows" ]; then
-            OUTPUT="${OUTPUT}.exe"
-          fi
-          
-          echo "Building $OUTPUT..."
-          GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-s -w" -o "dist/$OUTPUT" ./cmd/mylock
-        done
-        
-        # Create checksums
-        cd dist
-        sha256sum * > checksums.txt
-        cd ..
-    
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v6
+      with:
+        distribution: goreleaser
+        version: '~> v2'
+        args: release --clean
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          ## mylock ${{ github.ref_name }}
-          
-          MySQL advisory lock CLI tool for preventing duplicate executions.
-          
-          ### Installation
-          
-          Download the appropriate binary for your platform from the assets below.
-          
-          ```bash
-          # Example for Linux amd64
-          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/mylock-linux-amd64 -o mylock
-          chmod +x mylock
-          ```
-          
-          ### Checksums
-          
-          Verify your download with the checksums.txt file.
-        draft: false
-        prerelease: false
-    
-    - name: Upload Release Assets
-      run: |
-        for file in dist/*; do
-          asset_name=$(basename "$file")
-          echo "Uploading $asset_name..."
-          
-          curl -L \
-            -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            -H "Content-Type: application/octet-stream" \
-            "${{ steps.create_release.outputs.upload_url }}?name=${asset_name}" \
-            --data-binary "@$file"
-        done
-
-  docker:
-    name: Docker Image
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: |
-          ${{ secrets.DOCKER_USERNAME }}/mylock
-          ghcr.io/${{ github.repository }}
-        tags: |
-          type=ref,event=tag
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=semver,pattern={{major}}
-    
-    - name: Build and push
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
