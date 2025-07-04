@@ -25,6 +25,7 @@ func run(args []string) int {
 				return 0
 			}
 		}
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		return locker.InternalError
 	}
 
