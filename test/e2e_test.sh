@@ -253,17 +253,28 @@ fi
 
 # Test 15: Empty password is allowed
 test_start "Empty password allowed"
-# Temporarily set empty password
+# Create a user without password for testing
+docker compose exec -T mysql mysql -u root -prootpass -e "CREATE USER IF NOT EXISTS 'nopassuser'@'%'; GRANT ALL ON testdb.* TO 'nopassuser'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
+
+# Test with empty password
+OLD_USER="$MYLOCK_USER"
 OLD_PASSWORD="$MYLOCK_PASSWORD"
+export MYLOCK_USER="nopassuser"
 export MYLOCK_PASSWORD=""
-# The command should either succeed (if MySQL accepts empty password) or fail with connection error
-# But it should NOT fail with "MYLOCK_PASSWORD environment variable is required"
-OUTPUT=$(./mylock --lock-name test-empty-pass --timeout 1 -- echo "empty pass test" 2>&1)
-if echo "$OUTPUT" | grep -q "MYLOCK_PASSWORD environment variable is required"; then
+
+# The command should work with empty password
+OUTPUT=$(./mylock --lock-name test-empty-pass --timeout 2 -- echo "empty pass works" 2>&1)
+if echo "$OUTPUT" | grep -q "empty pass works"; then
+    test_pass
+elif echo "$OUTPUT" | grep -q "MYLOCK_PASSWORD environment variable is required"; then
     test_fail "Empty password was rejected by config validation"
 else
+    # Connection might fail for other reasons, but that's OK as long as config accepts empty password
     test_pass
 fi
+
+# Restore original credentials
+export MYLOCK_USER="$OLD_USER"
 export MYLOCK_PASSWORD="$OLD_PASSWORD"
 
 # Summary
