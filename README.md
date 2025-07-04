@@ -65,9 +65,22 @@ To avoid conflicts with application-level MySQL configuration, `mylock` uses ded
 
 ## 🏗 Installation
 
+### Binary (Recommended)
+
+Download the latest release from the [releases page](https://github.com/yammerjp/mylock/releases/latest).
+
+```bash
+# Example for Linux amd64
+curl -L https://github.com/yammerjp/mylock/releases/latest/download/mylock_Linux_x86_64.tar.gz | tar xz
+chmod +x mylock
+sudo mv mylock /usr/local/bin/
+```
+
+### Go
+
     go install github.com/yammerjp/mylock/cmd/mylock@latest
 
-Or build from source:
+### Build from source
 
     git clone https://github.com/yammerjp/mylock.git
     cd mylock
