@@ -9,9 +9,10 @@ import (
 )
 
 type CLI struct {
-	LockName string   `kong:"required,help:'A unique name for the advisory lock.'"`
-	Timeout  int      `kong:"required,help:'Max seconds to wait for the lock.'"`
-	Command  []string `kong:"arg,required,name:'command',help:'Command to run once the lock is acquired.'"`
+	LockName            string   `kong:"optional,help:'A unique name for the advisory lock.'"`
+	LockNameFromCommand bool     `kong:"optional,help:'Generate lock name from command hash.'"`
+	Timeout             int      `kong:"required,help:'Max seconds to wait for the lock.'"`
+	Command             []string `kong:"arg,required,name:'command',help:'Command to run once the lock is acquired.'"`
 	// Config is populated from environment variables, not from CLI flags
 	Config config.Config `kong:"-"`
 }
@@ -59,6 +60,14 @@ func ParseCLI(args []string) (CLI, error) {
 		return cli, fmt.Errorf("help requested")
 	}
 
+	// Validate that exactly one of lock-name or lock-name-from-command is specified
+	if cli.LockName == "" && !cli.LockNameFromCommand {
+		return cli, fmt.Errorf("either --lock-name or --lock-name-from-command must be specified")
+	}
+	if cli.LockName != "" && cli.LockNameFromCommand {
+		return cli, fmt.Errorf("cannot specify both --lock-name and --lock-name-from-command")
+	}
+
 	return cli, nil
 }
 
@@ -73,6 +82,7 @@ func helpFormatter(options kong.HelpOptions, ctx *kong.Context) error {
 
 Usage:
   mylock --lock-name <name> --timeout <seconds> -- <command> [args...]
+  mylock --lock-name-from-command --timeout <seconds> -- <command> [args...]
 
 Environment Variables (required):
   MYLOCK_HOST         MySQL host (e.g., localhost)
@@ -82,9 +92,12 @@ Environment Variables (required):
   MYLOCK_DATABASE     MySQL database name
 
 Options:
-  --lock-name         Required. A unique name for the advisory lock.
-  --timeout           Required. Max seconds to wait for the lock.
-  --help              Show this help message.
+  --lock-name              A unique name for the advisory lock.
+  --lock-name-from-command Generate lock name from command hash.
+  --timeout                Required. Max seconds to wait for the lock.
+  --help                   Show this help message.
+
+Note: Either --lock-name or --lock-name-from-command must be specified (but not both).
 
 Behavior:
   - Connects to MySQL using the environment variables above.

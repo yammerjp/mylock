@@ -13,6 +13,7 @@ To avoid conflicts with application-level MySQL configuration, `mylock` uses ded
 ## 🚀 Usage
 
     mylock --lock-name <name> --timeout <seconds> -- <command> [args...]
+    mylock --lock-name-from-command --timeout <seconds> -- <command> [args...]
 
 ## 🌱 Required Environment Variables
 
@@ -30,6 +31,7 @@ To avoid conflicts with application-level MySQL configuration, `mylock` uses ded
 
     Usage:
       mylock --lock-name <name> --timeout <seconds> -- <command> [args...]
+      mylock --lock-name-from-command --timeout <seconds> -- <command> [args...]
 
     Environment Variables (required):
       MYLOCK_HOST         MySQL host (e.g., localhost)
@@ -39,9 +41,12 @@ To avoid conflicts with application-level MySQL configuration, `mylock` uses ded
       MYLOCK_DATABASE     MySQL database name
 
     Options:
-      --lock-name         Required. A unique name for the advisory lock.
-      --timeout           Required. Max seconds to wait for the lock.
-      --help              Show this help message.
+      --lock-name              A unique name for the advisory lock.
+      --lock-name-from-command Generate lock name from command hash.
+      --timeout                Required. Max seconds to wait for the lock.
+      --help                   Show this help message.
+
+    Note: Either --lock-name or --lock-name-from-command must be specified (but not both).
 
     Behavior:
       - Connects to MySQL using the environment variables above.
@@ -62,6 +67,9 @@ To avoid conflicts with application-level MySQL configuration, `mylock` uses ded
       MYLOCK_PASSWORD=secret \
       MYLOCK_DATABASE=jobs \
       mylock --lock-name daily-report --timeout 10 -- ./generate_report.sh
+
+      # Or use command-based lock name (useful for dynamic commands)
+      mylock --lock-name-from-command --timeout 10 -- ./process_file.sh /data/input.csv
 
 ## 🏗 Installation
 

@@ -40,16 +40,22 @@ func run(args []string) int {
 	// Create executor
 	exec := executor.New()
 
+	// Determine lock name
+	lockName := cliArgs.LockName
+	if cliArgs.LockNameFromCommand {
+		lockName = cli.HashCommand(cliArgs.Command)
+	}
+
 	// Run command with lock
 	ctx := context.Background()
-	err = lock.WithLock(ctx, cliArgs.LockName, cliArgs.Timeout, func() error {
+	err = lock.WithLock(ctx, lockName, cliArgs.Timeout, func() error {
 		_, execErr := exec.Execute(ctx, cliArgs.Command)
 		return execErr
 	})
 
 	if err != nil {
 		if err == locker.ErrLockTimeout {
-			fmt.Fprintf(os.Stderr, "Failed to acquire lock '%s' within %d seconds\n", cliArgs.LockName, cliArgs.Timeout)
+			fmt.Fprintf(os.Stderr, "Failed to acquire lock '%s' within %d seconds\n", lockName, cliArgs.Timeout)
 			return locker.LockTimeout
 		}
 		// Check if it's an execution error with specific exit code

@@ -200,6 +200,57 @@ else
     test_fail "Expected exit code 201 (internal error), got ${EXIT_CODE:-0}"
 fi
 
+# Test 11: Lock name from command
+test_start "Lock name from command"
+OUTPUT=$(./mylock --lock-name-from-command --timeout 5 -- echo "test output")
+if [ "$OUTPUT" = "test output" ]; then
+    test_pass
+else
+    test_fail "Expected 'test output', got '$OUTPUT'"
+fi
+
+# Test 12: Same command produces same lock name
+test_start "Same command with --lock-name-from-command blocks"
+# First process holds the lock
+./mylock --lock-name-from-command --timeout 10 -- sh -c "sleep 3; echo 'first'" &
+PID1=$!
+sleep 1
+
+# Second process with same command should timeout
+./mylock --lock-name-from-command --timeout 1 -- sh -c "sleep 3; echo 'first'" 2>/dev/null || EXIT_CODE=$?
+if [ "${EXIT_CODE:-0}" -eq 200 ]; then
+    test_pass
+else
+    test_fail "Expected exit code 200 (timeout), got ${EXIT_CODE:-0}"
+fi
+wait $PID1
+
+# Test 13: Different commands don't block each other with --lock-name-from-command
+test_start "Different commands with --lock-name-from-command don't block"
+./mylock --lock-name-from-command --timeout 5 -- sleep 2 &
+PID1=$!
+sleep 0.5
+START_TIME=$(date +%s)
+./mylock --lock-name-from-command --timeout 5 -- echo "different command"
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+
+if [ $DURATION -lt 2 ]; then
+    test_pass
+else
+    test_fail "Different commands blocked each other (took ${DURATION}s)"
+fi
+wait $PID1
+
+# Test 14: Cannot use both --lock-name and --lock-name-from-command
+test_start "Cannot use both lock name options"
+./mylock --lock-name test --lock-name-from-command --timeout 5 -- echo "test" 2>/dev/null || EXIT_CODE=$?
+if [ "${EXIT_CODE:-0}" -eq 201 ]; then
+    test_pass
+else
+    test_fail "Expected exit code 201 (internal error), got ${EXIT_CODE:-0}"
+fi
+
 # Summary
 echo
 echo "================================="

@@ -64,7 +64,41 @@ func TestParseCLI(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "missing lock-name",
+			name: "valid with lock-name-from-command",
+			args: []string{"--lock-name-from-command", "--timeout", "30", "--", "echo", "hello"},
+			envVars: map[string]string{
+				"MYLOCK_HOST":     "localhost",
+				"MYLOCK_USER":     "testuser",
+				"MYLOCK_PASSWORD": "testpass",
+				"MYLOCK_DATABASE": "testdb",
+			},
+			want: CLI{
+				LockNameFromCommand: true,
+				Timeout:             30,
+				Command:             []string{"echo", "hello"},
+				Config: config.Config{
+					Host:     "localhost",
+					Port:     3306,
+					User:     "testuser",
+					Password: "testpass",
+					Database: "testdb",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "both lock-name and lock-name-from-command should fail",
+			args: []string{"--lock-name", "test", "--lock-name-from-command", "--timeout", "30", "--", "echo", "hello"},
+			envVars: map[string]string{
+				"MYLOCK_HOST":     "localhost",
+				"MYLOCK_USER":     "testuser",
+				"MYLOCK_PASSWORD": "testpass",
+				"MYLOCK_DATABASE": "testdb",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing both lock-name and lock-name-from-command",
 			args: []string{"--timeout", "30", "--", "echo", "hello"},
 			envVars: map[string]string{
 				"MYLOCK_HOST":     "localhost",
