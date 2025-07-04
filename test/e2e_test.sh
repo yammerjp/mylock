@@ -251,6 +251,14 @@ else
     test_fail "Expected exit code 201 (internal error), got ${EXIT_CODE:-0}"
 fi
 
+# Test 15: Empty password is allowed
+test_start "Empty password allowed"
+# Temporarily set empty password
+OLD_PASSWORD="$MYLOCK_PASSWORD"
+export MYLOCK_PASSWORD=""
+./mylock --lock-name test-empty-pass --timeout 5 -- echo "empty pass test" 2>&1 | grep -q "Failed to connect to MySQL" && test_pass || test_fail "Empty password should be allowed"
+export MYLOCK_PASSWORD="$OLD_PASSWORD"
+
 # Summary
 echo
 echo "================================="

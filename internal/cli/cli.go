@@ -84,12 +84,12 @@ Usage:
   mylock --lock-name <name> --timeout <seconds> -- <command> [args...]
   mylock --lock-name-from-command --timeout <seconds> -- <command> [args...]
 
-Environment Variables (required):
-  MYLOCK_HOST         MySQL host (e.g., localhost)
-  MYLOCK_PORT         MySQL port (default: 3306)
-  MYLOCK_USER         MySQL username
-  MYLOCK_PASSWORD     MySQL password
-  MYLOCK_DATABASE     MySQL database name
+Environment Variables:
+  MYLOCK_HOST         MySQL host (required, e.g., localhost)
+  MYLOCK_PORT         MySQL port (optional, default: 3306)
+  MYLOCK_USER         MySQL username (required)
+  MYLOCK_PASSWORD     MySQL password (optional, empty allowed)
+  MYLOCK_DATABASE     MySQL database name (required)
 
 Options:
   --lock-name              A unique name for the advisory lock.

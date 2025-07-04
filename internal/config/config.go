@@ -51,9 +51,7 @@ func NewConfig() (Config, error) {
 	}
 
 	cfg.Password = os.Getenv("MYLOCK_PASSWORD")
-	if cfg.Password == "" {
-		return cfg, fmt.Errorf("MYLOCK_PASSWORD environment variable is required")
-	}
+	// Empty password is allowed for MySQL connections without password
 
 	cfg.Database = os.Getenv("MYLOCK_DATABASE")
 	if cfg.Database == "" {
@@ -64,6 +62,11 @@ func NewConfig() (Config, error) {
 }
 
 func (c Config) DSN() string {
+	// Handle empty password case
+	if c.Password == "" {
+		return fmt.Sprintf("%s@tcp(%s:%d)/%s",
+			c.User, c.Host, c.Port, c.Database)
+	}
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
 		c.User, c.Password, c.Host, c.Port, c.Database)
 }

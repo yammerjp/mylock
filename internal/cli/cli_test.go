@@ -151,6 +151,29 @@ func TestParseCLI(t *testing.T) {
 			},
 			wantErr: true, // kong prints help and returns error
 		},
+		{
+			name: "empty password allowed",
+			args: []string{"--lock-name", "test-lock", "--timeout", "30", "--", "echo", "hello"},
+			envVars: map[string]string{
+				"MYLOCK_HOST":     "localhost",
+				"MYLOCK_USER":     "testuser",
+				"MYLOCK_PASSWORD": "",
+				"MYLOCK_DATABASE": "testdb",
+			},
+			want: CLI{
+				LockName: "test-lock",
+				Timeout:  30,
+				Command:  []string{"echo", "hello"},
+				Config: config.Config{
+					Host:     "localhost",
+					Port:     3306,
+					User:     "testuser",
+					Password: "",
+					Database: "testdb",
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

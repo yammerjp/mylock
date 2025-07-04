@@ -66,13 +66,21 @@ func TestNewConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "missing MYLOCK_PASSWORD",
+			name: "empty MYLOCK_PASSWORD is allowed",
 			envVars: map[string]string{
 				"MYLOCK_HOST":     "localhost",
 				"MYLOCK_USER":     "testuser",
+				"MYLOCK_PASSWORD": "",
 				"MYLOCK_DATABASE": "testdb",
 			},
-			wantErr: true,
+			want: Config{
+				Host:     "localhost",
+				Port:     3306,
+				User:     "testuser",
+				Password: "",
+				Database: "testdb",
+			},
+			wantErr: false,
 		},
 		{
 			name: "missing MYLOCK_DATABASE",
@@ -181,6 +189,17 @@ func TestConfig_DSN(t *testing.T) {
 				Database: "db",
 			},
 			want: "user:p@ss:word/123@tcp(localhost:3306)/db",
+		},
+		{
+			name: "empty password",
+			config: Config{
+				Host:     "localhost",
+				Port:     3306,
+				User:     "user",
+				Password: "",
+				Database: "db",
+			},
+			want: "user@tcp(localhost:3306)/db",
 		},
 	}
 

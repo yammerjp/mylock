@@ -17,13 +17,13 @@ To avoid conflicts with application-level MySQL configuration, `mylock` uses ded
 
 ## 🌱 Required Environment Variables
 
-| Variable         | Required | Example            | Description         |
-|------------------|----------|--------------------|---------------------|
-| MYLOCK_HOST       | ✅        | 127.0.0.1          | MySQL hostname      |
-| MYLOCK_PORT       | ⬜️        | 3306 (default)     | MySQL port          |
-| MYLOCK_USER       | ✅        | cronuser           | MySQL username      |
-| MYLOCK_PASSWORD   | ✅        | secret             | MySQL password      |
-| MYLOCK_DATABASE   | ✅        | jobs               | MySQL database name |
+| Variable         | Required | Example            | Description                     |
+|------------------|----------|--------------------|----------------------------------|
+| MYLOCK_HOST       | ✅        | 127.0.0.1          | MySQL hostname                   |
+| MYLOCK_PORT       | ⬜️        | 3306 (default)     | MySQL port                       |
+| MYLOCK_USER       | ✅        | cronuser           | MySQL username                   |
+| MYLOCK_PASSWORD   | ⬜️        | secret             | MySQL password (empty allowed)   |
+| MYLOCK_DATABASE   | ✅        | jobs               | MySQL database name              |
 
 ## 📘 Help Output
 
@@ -33,12 +33,12 @@ To avoid conflicts with application-level MySQL configuration, `mylock` uses ded
       mylock --lock-name <name> --timeout <seconds> -- <command> [args...]
       mylock --lock-name-from-command --timeout <seconds> -- <command> [args...]
 
-    Environment Variables (required):
-      MYLOCK_HOST         MySQL host (e.g., localhost)
-      MYLOCK_PORT         MySQL port (default: 3306)
-      MYLOCK_USER         MySQL username
-      MYLOCK_PASSWORD     MySQL password
-      MYLOCK_DATABASE     MySQL database name
+    Environment Variables:
+      MYLOCK_HOST         MySQL host (required, e.g., localhost)
+      MYLOCK_PORT         MySQL port (optional, default: 3306)
+      MYLOCK_USER         MySQL username (required)
+      MYLOCK_PASSWORD     MySQL password (optional, empty allowed)
+      MYLOCK_DATABASE     MySQL database name (required)
 
     Options:
       --lock-name              A unique name for the advisory lock.
