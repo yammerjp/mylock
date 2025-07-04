@@ -12,7 +12,8 @@ type CLI struct {
 	LockName string   `kong:"required,help:'A unique name for the advisory lock.'"`
 	Timeout  int      `kong:"required,help:'Max seconds to wait for the lock.'"`
 	Command  []string `kong:"arg,required,name:'command',help:'Command to run once the lock is acquired.'"`
-	config.Config
+	// Config is populated from environment variables, not from CLI flags
+	Config   config.Config `kong:"-"`
 }
 
 func ParseCLI(args []string) (CLI, error) {

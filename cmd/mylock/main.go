@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/yammerjp/mylock/internal/cli"
-	"github.com/yammerjp/mylock/internal/config"
 	"github.com/yammerjp/mylock/internal/executor"
 	"github.com/yammerjp/mylock/internal/locker"
 )
@@ -29,17 +28,8 @@ func run(args []string) int {
 		return locker.InternalError
 	}
 
-	// Create database configuration
-	cfg := config.Config{
-		Host:     cliArgs.Config.Host,
-		Port:     cliArgs.Config.Port,
-		User:     cliArgs.Config.User,
-		Password: cliArgs.Config.Password,
-		Database: cliArgs.Config.Database,
-	}
-
 	// Initialize locker
-	lock, err := locker.NewLocker(cfg.DSN())
+	lock, err := locker.NewLocker(cliArgs.Config.DSN())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to connect to MySQL: %v\n", err)
 		return locker.InternalError
