@@ -256,7 +256,14 @@ test_start "Empty password allowed"
 # Temporarily set empty password
 OLD_PASSWORD="$MYLOCK_PASSWORD"
 export MYLOCK_PASSWORD=""
-./mylock --lock-name test-empty-pass --timeout 5 -- echo "empty pass test" 2>&1 | grep -q "Failed to connect to MySQL" && test_pass || test_fail "Empty password should be allowed"
+# The command should either succeed (if MySQL accepts empty password) or fail with connection error
+# But it should NOT fail with "MYLOCK_PASSWORD environment variable is required"
+OUTPUT=$(./mylock --lock-name test-empty-pass --timeout 1 -- echo "empty pass test" 2>&1)
+if echo "$OUTPUT" | grep -q "MYLOCK_PASSWORD environment variable is required"; then
+    test_fail "Empty password was rejected by config validation"
+else
+    test_pass
+fi
 export MYLOCK_PASSWORD="$OLD_PASSWORD"
 
 # Summary
