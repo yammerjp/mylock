@@ -67,19 +67,19 @@ func TestMainIntegration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := exec.Command(binPath, tt.args...)
-			
+
 			// Set test environment
 			cmd.Env = os.Environ()
 			for key, value := range tt.envVars {
 				cmd.Env = append(cmd.Env, key+"="+value)
 			}
-			
+
 			var stdout, stderr bytes.Buffer
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
-			
+
 			err := cmd.Run()
-			
+
 			// Check exit code
 			exitCode := 0
 			if err != nil {
@@ -89,11 +89,11 @@ func TestMainIntegration(t *testing.T) {
 					t.Fatalf("Unexpected error: %v", err)
 				}
 			}
-			
+
 			if exitCode != tt.wantExit {
 				t.Errorf("Exit code = %v, want %v", exitCode, tt.wantExit)
 			}
-			
+
 			// Check output
 			output := stdout.String() + stderr.String()
 			if tt.wantOut != "" && !strings.Contains(output, tt.wantOut) {
@@ -102,3 +102,4 @@ func TestMainIntegration(t *testing.T) {
 		})
 	}
 }
+

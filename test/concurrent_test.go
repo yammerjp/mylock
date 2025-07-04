@@ -75,7 +75,7 @@ func TestConcurrentExecution(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var wg sync.WaitGroup
 			results := make(chan bool, tt.workers)
-			
+
 			// Create a shared output file
 			outputFile := filepath.Join(t.TempDir(), "output.txt")
 
@@ -84,12 +84,12 @@ func TestConcurrentExecution(t *testing.T) {
 				workerID := i
 				go func() {
 					defer wg.Done()
-					
+
 					lockName := tt.lockName
 					if lockName == "" {
 						lockName = fmt.Sprintf("test-lock-%d", workerID)
 					}
-					
+
 					// Run mylock with a command that writes to the shared file
 					cmd := exec.Command(binPath,
 						"--lock-name", lockName,
@@ -98,19 +98,19 @@ func TestConcurrentExecution(t *testing.T) {
 						"sh", "-c",
 						fmt.Sprintf("echo 'Worker %d started' >> %s && sleep %s && echo 'Worker %d finished' >> %s",
 							workerID, outputFile, tt.commandDelay, workerID, outputFile))
-					
+
 					// Set environment variables
 					cmd.Env = os.Environ()
-					
+
 					err := cmd.Run()
 					results <- (err == nil)
 				}()
 			}
-			
+
 			// Wait for all workers to complete
 			wg.Wait()
 			close(results)
-			
+
 			// Count successes and failures
 			successes := 0
 			for success := range results {
@@ -119,19 +119,19 @@ func TestConcurrentExecution(t *testing.T) {
 				}
 			}
 			failures := tt.workers - successes
-			
+
 			if failures != tt.expectFail {
 				t.Errorf("Expected %d failures, got %d (successes: %d)",
 					tt.expectFail, failures, successes)
 			}
-			
+
 			// For sequential execution test, verify order
 			if tt.name == "three workers, sequential execution" && successes == tt.workers {
 				content, err := os.ReadFile(outputFile)
 				if err != nil {
 					t.Fatalf("Failed to read output file: %v", err)
 				}
-				
+
 				// Verify that workers executed sequentially
 				// Each worker should start and finish before the next one starts
 				t.Logf("Sequential execution output:\n%s", content)
@@ -160,7 +160,7 @@ func TestConcurrentRelease(t *testing.T) {
 
 	// Test that locks are properly released even on failure
 	lockName := "test-release"
-	
+
 	// First execution: acquire lock and fail
 	cmd1 := exec.Command(binPath,
 		"--lock-name", lockName,
@@ -168,12 +168,12 @@ func TestConcurrentRelease(t *testing.T) {
 		"--",
 		"sh", "-c", "exit 1")
 	cmd1.Env = os.Environ()
-	
+
 	err := cmd1.Run()
 	if err == nil {
 		t.Fatal("Expected first command to fail")
 	}
-	
+
 	// Second execution: should be able to acquire the same lock immediately
 	cmd2 := exec.Command(binPath,
 		"--lock-name", lockName,
@@ -181,15 +181,15 @@ func TestConcurrentRelease(t *testing.T) {
 		"--",
 		"sh", "-c", "echo 'Lock acquired successfully'")
 	cmd2.Env = os.Environ()
-	
+
 	start := time.Now()
 	err = cmd2.Run()
 	duration := time.Since(start)
-	
+
 	if err != nil {
 		t.Fatalf("Second command failed: %v", err)
 	}
-	
+
 	// Verify it didn't have to wait (lock was properly released)
 	if duration > 2*time.Second {
 		t.Errorf("Second command took too long (%v), lock might not have been released properly", duration)
@@ -215,7 +215,7 @@ func TestConcurrentSignalHandling(t *testing.T) {
 	}
 
 	lockName := "test-signal"
-	
+
 	// Start first process that will hold the lock
 	cmd1 := exec.Command(binPath,
 		"--lock-name", lockName,
@@ -223,14 +223,14 @@ func TestConcurrentSignalHandling(t *testing.T) {
 		"--",
 		"sh", "-c", "sleep 10")
 	cmd1.Env = os.Environ()
-	
+
 	if err := cmd1.Start(); err != nil {
 		t.Fatalf("Failed to start first command: %v", err)
 	}
-	
+
 	// Give it time to acquire the lock
 	time.Sleep(1 * time.Second)
-	
+
 	// Start second process that will wait for the lock
 	cmd2 := exec.Command(binPath,
 		"--lock-name", lockName,
@@ -238,33 +238,33 @@ func TestConcurrentSignalHandling(t *testing.T) {
 		"--",
 		"sh", "-c", "echo 'Got lock after signal'")
 	cmd2.Env = os.Environ()
-	
+
 	start := time.Now()
 	if err := cmd2.Start(); err != nil {
 		t.Fatalf("Failed to start second command: %v", err)
 	}
-	
+
 	// Give second process time to start waiting
 	time.Sleep(500 * time.Millisecond)
-	
+
 	// Send SIGTERM to first process
 	if err := cmd1.Process.Signal(os.Interrupt); err != nil {
 		t.Fatalf("Failed to send signal: %v", err)
 	}
-	
+
 	// Wait for second process to complete
 	err := cmd2.Wait()
 	duration := time.Since(start)
-	
+
 	if err != nil {
 		t.Fatalf("Second command failed: %v", err)
 	}
-	
+
 	// Verify the second process got the lock quickly after the signal
 	if duration > 3*time.Second {
 		t.Errorf("Second command took too long (%v), lock might not have been released on signal", duration)
 	}
-	
+
 	// Clean up first process
 	_ = cmd1.Process.Kill()
 	_ = cmd1.Wait()
@@ -291,27 +291,28 @@ func TestRaceCondition(t *testing.T) {
 	// Run multiple instances concurrently with race detector
 	lockName := "test-race"
 	workers := 5
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	var wg sync.WaitGroup
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			
+
 			cmd := exec.CommandContext(ctx, binPath,
 				"--lock-name", lockName,
 				"--timeout", "2",
 				"--",
 				"sh", "-c", fmt.Sprintf("echo 'Worker %d'", id))
 			cmd.Env = os.Environ()
-			
+
 			// Race detector will panic if it finds issues
 			_ = cmd.Run()
 		}(i)
 	}
-	
+
 	wg.Wait()
 }
+

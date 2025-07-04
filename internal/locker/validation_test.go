@@ -144,3 +144,4 @@ func TestLockNamePatternSecurity(t *testing.T) {
 		})
 	}
 }
+

@@ -4,7 +4,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	
+
 	"github.com/yammerjp/mylock/internal/config"
 )
 

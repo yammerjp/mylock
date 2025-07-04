@@ -13,12 +13,12 @@ type CLI struct {
 	Timeout  int      `kong:"required,help:'Max seconds to wait for the lock.'"`
 	Command  []string `kong:"arg,required,name:'command',help:'Command to run once the lock is acquired.'"`
 	// Config is populated from environment variables, not from CLI flags
-	Config   config.Config `kong:"-"`
+	Config config.Config `kong:"-"`
 }
 
 func ParseCLI(args []string) (CLI, error) {
 	var cli CLI
-	
+
 	// Parse config from environment first
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -31,7 +31,7 @@ func ParseCLI(args []string) (CLI, error) {
 	} else {
 		cli.Config = cfg
 	}
-	
+
 	parser, err := kong.New(&cli,
 		kong.Name("mylock"),
 		kong.Description("Acquire a MySQL advisory lock and run a command"),
@@ -108,4 +108,3 @@ Example:
 `)
 	return nil
 }
-

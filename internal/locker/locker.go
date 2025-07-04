@@ -17,7 +17,7 @@ const (
 	// Exit codes
 	LockTimeout   = 200
 	InternalError = 201
-	
+
 	// DefaultPingTimeout is the default timeout for database ping operations
 	DefaultPingTimeout = 5 * time.Second
 )
