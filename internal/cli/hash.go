@@ -26,4 +26,3 @@ func HashCommand(command []string) string {
 
 	return lockName
 }
-

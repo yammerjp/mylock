@@ -65,4 +65,3 @@ func TestHashCommand(t *testing.T) {
 		})
 	}
 }
-
