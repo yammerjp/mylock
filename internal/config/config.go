@@ -6,6 +6,15 @@ import (
 	"strconv"
 )
 
+const (
+	// DefaultMySQLPort is the default port for MySQL/MariaDB connections
+	DefaultMySQLPort = 3306
+	// MinPort is the minimum valid port number
+	MinPort = 1
+	// MaxPort is the maximum valid port number
+	MaxPort = 65535
+)
+
 type Config struct {
 	Host     string
 	Port     int
@@ -25,11 +34,14 @@ func NewConfig() (Config, error) {
 
 	portStr := os.Getenv("MYLOCK_PORT")
 	if portStr == "" {
-		cfg.Port = 3306
+		cfg.Port = DefaultMySQLPort
 	} else {
 		cfg.Port, err = strconv.Atoi(portStr)
 		if err != nil {
 			return cfg, fmt.Errorf("invalid MYLOCK_PORT: %w", err)
+		}
+		if cfg.Port < MinPort || cfg.Port > MaxPort {
+			return cfg, fmt.Errorf("MYLOCK_PORT must be between %d and %d", MinPort, MaxPort)
 		}
 	}
 

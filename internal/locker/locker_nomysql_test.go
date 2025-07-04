@@ -136,12 +136,12 @@ func TestNewLocker_Coverage(t *testing.T) {
 		},
 		{
 			name:    "successful connection",
-			dsn:     "mock-success:test",
+			dsn:     "mock-success://test",
 			wantErr: false,
 		},
 		{
 			name:    "ping failure",
-			dsn:     "mock-ping-fail:test",
+			dsn:     "mock-ping-fail://test",
 			wantErr: true,
 			errMsg:  "failed to ping database",
 		},

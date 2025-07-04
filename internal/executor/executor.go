@@ -11,13 +11,10 @@ import (
 )
 
 type Executor struct {
-	sigChan chan os.Signal
 }
 
 func New() *Executor {
-	return &Executor{
-		sigChan: make(chan os.Signal, 1),
-	}
+	return &Executor{}
 }
 
 func (e *Executor) Execute(ctx context.Context, command []string) (int, error) {
@@ -32,9 +29,10 @@ func (e *Executor) Execute(ctx context.Context, command []string) (int, error) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	// Set up signal handling
-	signal.Notify(e.sigChan, syscall.SIGINT, syscall.SIGTERM)
-	defer signal.Stop(e.sigChan)
+	// Set up signal handling with a local channel
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sigChan)
 
 	// Start the command
 	if err := cmd.Start(); err != nil {
@@ -54,7 +52,7 @@ func (e *Executor) Execute(ctx context.Context, command []string) (int, error) {
 			return -1, fmt.Errorf("failed to kill process: %w", err)
 		}
 		return -1, ctx.Err()
-	case sig := <-e.sigChan:
+	case sig := <-sigChan:
 		// Forward signal to child process
 		if err := cmd.Process.Signal(sig); err != nil {
 			return -1, fmt.Errorf("failed to forward signal: %w", err)

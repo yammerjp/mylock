@@ -42,17 +42,8 @@ func run(args []string) int {
 	// Run command with lock
 	ctx := context.Background()
 	err = lock.WithLock(ctx, cliArgs.LockName, cliArgs.Timeout, func() error {
-		exitCode, execErr := exec.Execute(ctx, cliArgs.Command)
-		if execErr != nil {
-			// If the command was found but exited with non-zero status,
-			// we want to return that exit code
-			if exitCode > 0 && exitCode <= 127 {
-				// Store exit code for later use
-				os.Exit(exitCode)
-			}
-			return execErr
-		}
-		return nil
+		_, execErr := exec.Execute(ctx, cliArgs.Command)
+		return execErr
 	})
 
 	if err != nil {

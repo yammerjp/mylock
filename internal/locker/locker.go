@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -13,8 +14,12 @@ import (
 )
 
 const (
+	// Exit codes
 	LockTimeout   = 200
 	InternalError = 201
+	
+	// DefaultPingTimeout is the default timeout for database ping operations
+	DefaultPingTimeout = 5 * time.Second
 )
 
 var (
@@ -57,7 +62,7 @@ func NewLocker(dsn string) (*Locker, error) {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultPingTimeout)
 	defer cancel()
 
 	if err := db.PingContext(ctx); err != nil {
@@ -131,7 +136,7 @@ func (l *Locker) WithLock(ctx context.Context, lockName string, timeout int, fn 
 		_, releaseErr := l.ReleaseLock(releaseCtx, lockName)
 		if releaseErr != nil {
 			// Log error but don't override the function error
-			fmt.Printf("Warning: failed to release lock: %v\n", releaseErr)
+			fmt.Fprintf(os.Stderr, "Warning: failed to release lock: %v\n", releaseErr)
 		}
 	}()
 
