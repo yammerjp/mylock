@@ -10,7 +10,6 @@ import (
 
 // mockDriver implements the database/sql/driver interfaces for testing
 type mockDriver struct {
-	pingError    error
 	connectError error
 	queryError   error
 	queryResult  int64
@@ -147,7 +146,7 @@ func TestNewLocker_Coverage(t *testing.T) {
 		},
 		{
 			name:    "connection failure",
-			dsn:     "mock-connect-fail:test",
+			dsn:     "mock-connect-fail://test",
 			wantErr: true,
 			errMsg:  "failed to open database",
 		},

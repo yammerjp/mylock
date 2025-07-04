@@ -15,7 +15,7 @@ import (
 func getTestDSN() string {
 	host := os.Getenv("TEST_MYSQL_HOST")
 	if host == "" {
-		host = "localhost"
+		host = "127.0.0.1"
 	}
 	port := os.Getenv("TEST_MYSQL_PORT")
 	if port == "" {

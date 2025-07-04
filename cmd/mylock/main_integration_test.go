@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package main
@@ -29,7 +30,7 @@ func TestMainIntegration(t *testing.T) {
 			name: "help flag",
 			args: []string{"--help"},
 			envVars: map[string]string{
-				"MYLOCK_HOST":     "localhost",
+				"MYLOCK_HOST":     "127.0.0.1",
 				"MYLOCK_USER":     "root",
 				"MYLOCK_PASSWORD": "pass",
 				"MYLOCK_DATABASE": "test",
@@ -41,7 +42,7 @@ func TestMainIntegration(t *testing.T) {
 			name: "missing required args",
 			args: []string{},
 			envVars: map[string]string{
-				"MYLOCK_HOST":     "localhost",
+				"MYLOCK_HOST":     "127.0.0.1",
 				"MYLOCK_USER":     "root",
 				"MYLOCK_PASSWORD": "pass",
 				"MYLOCK_DATABASE": "test",

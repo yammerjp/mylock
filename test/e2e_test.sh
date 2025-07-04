@@ -61,7 +61,7 @@ echo "Binary built successfully"
 ls -la ./mylock
 
 # Set environment variables
-export MYLOCK_HOST=localhost
+export MYLOCK_HOST=127.0.0.1
 export MYLOCK_PORT=3306
 export MYLOCK_USER=testuser
 export MYLOCK_PASSWORD=testpass

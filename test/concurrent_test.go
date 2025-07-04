@@ -266,8 +266,8 @@ func TestConcurrentSignalHandling(t *testing.T) {
 	}
 	
 	// Clean up first process
-	cmd1.Process.Kill()
-	cmd1.Wait()
+	_ = cmd1.Process.Kill()
+	_ = cmd1.Wait()
 }
 
 func TestRaceCondition(t *testing.T) {
