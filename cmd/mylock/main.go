@@ -72,7 +72,7 @@ func run(args []string) int {
 		}
 		// Check if it's an execution error with specific exit code
 		exitCode := executor.GetExitCode(err)
-		if exitCode > 0 && exitCode <= 127 {
+		if exitCode >= 0 {
 			return exitCode
 		}
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
