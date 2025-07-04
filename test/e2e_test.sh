@@ -62,7 +62,7 @@ ls -la ./mylock
 
 # Set environment variables
 export MYLOCK_HOST=127.0.0.1
-export MYLOCK_PORT=3306
+export MYLOCK_PORT=13306
 export MYLOCK_USER=testuser
 export MYLOCK_PASSWORD=testpass
 export MYLOCK_DATABASE=testdb
@@ -184,7 +184,7 @@ wait $PID1
 test_start "Missing environment variables"
 unset MYLOCK_HOST
 ./mylock --lock-name test-env --timeout 5 -- echo "should fail" 2>/dev/null || EXIT_CODE=$?
-export MYLOCK_HOST=localhost
+export MYLOCK_HOST=127.0.0.1
 if [ "${EXIT_CODE:-0}" -eq 201 ]; then
     test_pass
 else

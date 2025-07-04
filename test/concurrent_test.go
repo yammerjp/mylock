@@ -315,4 +315,3 @@ func TestRaceCondition(t *testing.T) {
 
 	wg.Wait()
 }
-

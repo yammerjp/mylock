@@ -92,7 +92,7 @@ jobs:
       run: go test -v -tags=integration ./internal/locker/...
       env:
         TEST_MYSQL_HOST: 127.0.0.1
-        TEST_MYSQL_PORT: 3306
+        TEST_MYSQL_PORT: 13306
         TEST_MYSQL_USER: testuser
         TEST_MYSQL_PASSWORD: testpass
         TEST_MYSQL_DATABASE: testdb

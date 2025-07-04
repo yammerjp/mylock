@@ -116,7 +116,6 @@ func TestValidateLockName(t *testing.T) {
 		})
 	}
 }
-
 func TestLockNamePatternSecurity(t *testing.T) {
 	// Test various SQL injection attempts
 	dangerousNames := []string{
@@ -144,4 +143,3 @@ func TestLockNamePatternSecurity(t *testing.T) {
 		})
 	}
 }
-
