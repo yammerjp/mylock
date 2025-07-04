@@ -4,6 +4,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	
+	"github.com/yammerjp/mylock/internal/config"
 )
 
 func TestParseCLI(t *testing.T) {
@@ -27,7 +29,7 @@ func TestParseCLI(t *testing.T) {
 				LockName: "test-lock",
 				Timeout:  30,
 				Command:  []string{"echo", "hello"},
-				Config: Config{
+				Config: config.Config{
 					Host:     "localhost",
 					Port:     3306,
 					User:     "testuser",
@@ -51,7 +53,7 @@ func TestParseCLI(t *testing.T) {
 				LockName: "another-lock",
 				Timeout:  10,
 				Command:  []string{"ls", "-la"},
-				Config: Config{
+				Config: config.Config{
 					Host:     "db.example.com",
 					Port:     3307,
 					User:     "dbuser",

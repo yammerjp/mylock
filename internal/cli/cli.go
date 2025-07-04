@@ -5,25 +5,32 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/yammerjp/mylock/internal/config"
 )
 
 type CLI struct {
 	LockName string   `kong:"required,help:'A unique name for the advisory lock.'"`
 	Timeout  int      `kong:"required,help:'Max seconds to wait for the lock.'"`
 	Command  []string `kong:"arg,required,name:'command',help:'Command to run once the lock is acquired.'"`
-	Config
-}
-
-type Config struct {
-	Host     string `kong:"env='MYLOCK_HOST',required,help:'MySQL host'"`
-	Port     int    `kong:"env='MYLOCK_PORT',default='3306',help:'MySQL port'"`
-	User     string `kong:"env='MYLOCK_USER',required,help:'MySQL username'"`
-	Password string `kong:"env='MYLOCK_PASSWORD',required,help:'MySQL password'"`
-	Database string `kong:"env='MYLOCK_DATABASE',required,help:'MySQL database name'"`
+	config.Config
 }
 
 func ParseCLI(args []string) (CLI, error) {
 	var cli CLI
+	
+	// Parse config from environment first
+	cfg, err := config.NewConfig()
+	if err != nil {
+		// For help, we don't need valid config
+		if len(args) > 0 && (args[0] == "--help" || args[0] == "-h") {
+			// Continue with empty config for help
+		} else {
+			return cli, err
+		}
+	} else {
+		cli.Config = cfg
+	}
+	
 	parser, err := kong.New(&cli,
 		kong.Name("mylock"),
 		kong.Description("Acquire a MySQL advisory lock and run a command"),
@@ -101,7 +108,3 @@ Example:
 	return nil
 }
 
-func (c Config) DSN() string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
-		c.User, c.Password, c.Host, c.Port, c.Database)
-}

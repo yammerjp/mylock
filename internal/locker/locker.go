@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -15,7 +17,31 @@ const (
 	InternalError = 201
 )
 
-var ErrLockTimeout = errors.New("failed to acquire lock within timeout")
+var (
+	ErrLockTimeout = errors.New("failed to acquire lock within timeout")
+	// Safe pattern for lock names: alphanumeric, underscore, hyphen, dot
+	lockNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_\-\.]+$`)
+)
+
+// validateLockName ensures the lock name is safe for MySQL
+func validateLockName(lockName string) error {
+	if lockName == "" {
+		return errors.New("lock name is required")
+	}
+	if len(lockName) > 64 {
+		return errors.New("lock name too long (max 64 characters)")
+	}
+	if !lockNamePattern.MatchString(lockName) {
+		return errors.New("lock name contains invalid characters (use only alphanumeric, underscore, hyphen, dot)")
+	}
+	if strings.Contains(lockName, "..") {
+		return errors.New("lock name contains consecutive dots")
+	}
+	if strings.Contains(lockName, "--") {
+		return errors.New("lock name contains consecutive hyphens")
+	}
+	return nil
+}
 
 type Locker struct {
 	db *sql.DB
@@ -50,8 +76,8 @@ func (l *Locker) Close() error {
 }
 
 func (l *Locker) AcquireLock(ctx context.Context, lockName string, timeout int) (bool, error) {
-	if lockName == "" {
-		return false, errors.New("lock name is required")
+	if err := validateLockName(lockName); err != nil {
+		return false, err
 	}
 	if timeout <= 0 {
 		return false, errors.New("timeout must be positive")
@@ -72,8 +98,8 @@ func (l *Locker) AcquireLock(ctx context.Context, lockName string, timeout int) 
 }
 
 func (l *Locker) ReleaseLock(ctx context.Context, lockName string) (bool, error) {
-	if lockName == "" {
-		return false, errors.New("lock name is required")
+	if err := validateLockName(lockName); err != nil {
+		return false, err
 	}
 
 	var result sql.NullInt64
