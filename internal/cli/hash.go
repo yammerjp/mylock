@@ -13,16 +13,17 @@ func HashCommand(command []string) string {
 	// Join the command with null bytes to avoid ambiguity
 	// e.g., ["echo", "hello world"] vs ["echo hello", "world"]
 	joined := strings.Join(command, "\x00")
-	
+
 	// Calculate SHA256 hash
 	hash := sha256.Sum256([]byte(joined))
 	hashStr := hex.EncodeToString(hash[:])
-	
+
 	// Prefix with "mylock-" and truncate to 64 chars if needed
 	lockName := "mylock-" + hashStr
 	if len(lockName) > 64 {
 		lockName = lockName[:64]
 	}
-	
+
 	return lockName
 }
+
